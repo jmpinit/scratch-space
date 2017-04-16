@@ -128,6 +128,29 @@ mesh.position.y = geometry.parameters.height/2
 markerRoot.add( mesh );
 
 /*
+const upLeft = new THREE.Vector3(0, -0.5, -0.5);
+const upRight = new THREE.Vector3(0, 0.5, -0.5);
+const downLeft = new THREE.Vector3(0, -0.5, 0.5);
+const downRight = new THREE.Vector3(0, 0.5, 0.5);
+*/
+const upLeft = new THREE.Object3D();
+upLeft.position.set(-0.5, 0, -0.5);
+
+const upRight = new THREE.Object3D();
+upRight.position.set(0.5, 0, -0.5);
+
+const downLeft = new THREE.Object3D();
+downLeft.position.set(-0.5, 0, 0.5);
+
+const downRight = new THREE.Object3D();
+downRight.position.set(0.5, 0, 0.5);
+
+markerRoot.add(upLeft);
+markerRoot.add(upRight);
+markerRoot.add(downLeft);
+markerRoot.add(downRight);
+
+/*
 var geometry  = new THREE.TorusKnotGeometry(0.3,0.1,32,32);
 var material  = new THREE.MeshNormalMaterial(); 
 var mesh  = new THREE.Mesh( geometry, material );
@@ -148,6 +171,10 @@ onRenderFcts.push(function(){
 
 let realCamera;
 setTimeout(() => { realCamera = new Camera(document.getElementsByTagName('video')[0]); }, 1000);
+
+var img_u8, img_u8_warp, transform;
+ img_u8 = new jsfeat.matrix_t(640, 480, jsfeat.U8_t | jsfeat.C1_t);
+      img_u8_warp = new jsfeat.matrix_t(640, 480, jsfeat.U8_t | jsfeat.C1_t);
 
 // run the rendering loop
 var lastTimeMsec= null
@@ -170,21 +197,22 @@ requestAnimationFrame(function animate(nowMsec){
     if (vinylCanvas && vinylCanvas.width !== 0) {
       // prep mask
       const srcCanvas = document.createElement('canvas');
-      srcCanvas.width = renderer.domElement.width;
-      srcCanvas.height = renderer.domElement.height;
+      //srcCanvas.width = renderer.domElement.width;
+      //srcCanvas.height = renderer.domElement.height;
+      srcCanvas.width = 640;
+      srcCanvas.height = 480;
 
       const srcCtx = srcCanvas.getContext('2d');
       srcCtx.drawImage(renderer.domElement, 0, 0, srcCanvas.width, srcCanvas.height);
 
-      const maskData = srcCtx.getImageData(0, 0, renderer.domElement.width, renderer.domElement.height);
+      const maskData = srcCtx.getImageData(0, 0, srcCanvas.width, srcCanvas.height);
 
       for (let i = 0; i < maskData.width * maskData.height; i++) {
-        //if (maskData.data[i * 4] !== 0) {
-          maskData.data[i * 4] = 255;
-          maskData.data[i * 4 + 1] = 255;
-          maskData.data[i * 4 + 2] = 255;
+        if (maskData.data[i * 4 + 3] === 0) {
+          maskData.data[i * 4 + 3] = 255;
+        } else {
           maskData.data[i * 4 + 3] = 0;
-        //}
+        }
       }
 
       const maskCanvas = document.createElement('canvas');
@@ -195,10 +223,78 @@ requestAnimationFrame(function animate(nowMsec){
       maskCtx.putImageData(maskData, 0, 0);
 
       const outCanvas = document.getElementById('output');
+      outCanvas.width = 640;
+      outCanvas.height = 480;
       const outCtx = outCanvas.getContext('2d');
 
-      //outCtx.drawImage(vinylCanvas, 0, 0, outCtx.width, outCtx.height);
+      outCtx.drawImage(vinylCanvas, 0, 0, outCanvas.width, outCanvas.height);
       outCtx.drawImage(maskCanvas, 0, 0, outCanvas.width, outCanvas.height);
+
+      // warp
+      transform = new jsfeat.matrix_t(3, 3, jsfeat.F32_t | jsfeat.C1_t);
+
+      /*jsfeat.math.perspective_4point_transform(transform, 0,   0,   50,  50,
+                                                                640, 0,   550, 100,
+                                                                640, 480, 300, 400,
+                                                                0,   480, 100, 400);*/
+
+      function toScreen(pos) {
+        var vector = new THREE.Vector3();
+        var canvas = outCanvas;
+
+        vector.copy(pos);
+
+        // map to normalized device coordinate (NDC) space
+        vector.project( camera );
+
+        // map to 2D screen space
+        vector.x = Math.round( (   vector.x + 1 ) * canvas.width  / 2 );
+        vector.y = Math.round( ( - vector.y + 1 ) * canvas.height / 2 );
+        vector.z = 0;
+
+        return vector;
+      }
+
+      function realPos(obj) {
+        const vector = new THREE.Vector3();
+        vector.setFromMatrixPosition(obj.matrixWorld);
+        return vector;
+      }
+
+      const screenUpLeft = toScreen(realPos(upLeft));
+      const screenUpRight = toScreen(realPos(upRight));
+      const screenDownLeft = toScreen(realPos(downLeft));
+      const screenDownRight = toScreen(realPos(downRight));
+
+      jsfeat.math.perspective_4point_transform(transform,
+        screenUpLeft.x, screenUpLeft.y, 0, 0,
+        screenUpRight.x, screenUpRight.y, 640, 0,
+        screenDownRight.x, screenDownRight.y, 640, 480,
+        screenDownLeft.x, screenDownLeft.y, 0, 480);
+
+      jsfeat.matmath.invert_3x3(transform, transform);
+
+      const imageData = outCtx.getImageData(0, 0, outCanvas.width, outCanvas.height);
+      jsfeat.imgproc.grayscale(imageData.data, maskData.width, maskData.height, img_u8); 
+      jsfeat.imgproc.warp_perspective(img_u8, img_u8_warp, transform, 0);
+
+      // render result back to canvas
+                    var data_u32 = new Uint32Array(imageData.data.buffer);
+                    var alpha = (0xff << 24);
+                    var i = img_u8_warp.cols*img_u8_warp.rows, pix = 0;
+                    while(--i >= 0) {
+                        pix = img_u8_warp.data[i];
+                        data_u32[i] = alpha | (pix << 16) | (pix << 8) | pix;
+                    }
+
+                  outCtx.putImageData(imageData, 0, 0);
+      //console.log(screenUpLeft);
+
+      outCtx.fillStyle = '#fff';
+      outCtx.fillRect(screenUpLeft.x, screenUpLeft.y, 4, 4);
+      outCtx.fillRect(screenUpRight.x, screenUpRight.y, 4, 4);
+      outCtx.fillRect(screenDownLeft.x, screenDownLeft.y, 4, 4);
+      outCtx.fillRect(screenDownRight.x, screenDownRight.y, 4, 4);
     }
   }
 })

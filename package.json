@@ -1,0 +1,22 @@
+{
+  "name": "scratch-space",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jmptable/scratch-space.git"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "Owen Trueblood",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jmptable/scratch-space/issues"
+  },
+  "homepage": "https://github.com/jmptable/scratch-space#readme",
+  "dependencies": {
+    "express": "^4.15.2"
+  }
+}

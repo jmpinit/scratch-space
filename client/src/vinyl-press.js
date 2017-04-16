@@ -49,7 +49,7 @@ function sonify(image) {
 
   const imageData = imageCtx.getImageData(0, 0, image.width, image.height);
 
-  const SQUARE_IMAGE_TIME = 5; // seconds
+  const SQUARE_IMAGE_TIME = 15; // seconds
   const frameCount = image.width / image.height * audioContext.sampleRate * SQUARE_IMAGE_TIME;
   const audioBuffer = audioContext.createBuffer(1, frameCount, audioContext.sampleRate);
 
@@ -81,7 +81,7 @@ function coverArt(audioBuffer) {
 
   const analyser = renderContext.createAnalyser();
   analyser.smoothingTimeConstant = 0;
-  analyser.fftSize = 1024;
+  analyser.fftSize = 512;
 
   const audioBufferNode = renderContext.createBufferSource();
   audioBufferNode.buffer = audioBuffer;
@@ -89,15 +89,16 @@ function coverArt(audioBuffer) {
 
   const canvas = document.createElement('canvas');
   canvas.width = analyser.fftSize;
-  canvas.height = 2048;
+  canvas.height = analyser.fftSize / 2;
 
   const ctx = canvas.getContext('2d');
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
   // Fills in a row of the image with spectrogram data
+  const audioData = new Uint8Array(analyser.frequencyBinCount);
   function createRowSampler(doneRatio, analyser) {
     return () => {
       console.log('sampling', doneRatio);
-      const audioData = new Uint8Array(analyser.frequencyBinCount);
       analyser.getByteFrequencyData(audioData);
 
       for (let i = 0; i < audioData.length; i++) {
@@ -106,8 +107,11 @@ function coverArt(audioBuffer) {
         const x = i;
         const y = Math.floor(doneRatio * canvas.height);
 
-        ctx.fillStyle = "rgb("+intensity+", "+intensity+", "+intensity+")";
-        ctx.fillRect(x, y, 1, 1);
+        const ii = (y * imageData.width + x) * 4;
+        imageData.data[ii] = intensity;
+        imageData.data[ii + 1] = intensity;
+        imageData.data[ii + 2] = intensity;
+        imageData.data[ii + 3] = 255;
       }
     };
   }
@@ -127,11 +131,60 @@ function coverArt(audioBuffer) {
   renderContext.startRendering();
 
   return new Promise((fulfill, reject) => {
-    renderContext.oncomplete = () => fulfill(canvas);
+    renderContext.oncomplete = () => {
+      ctx.putImageData(imageData, 0, 0);
+      fulfill(canvas);
+    };
   });
+}
+
+function map(value, low1, high1, low2, high2) {
+  return low2 + (high2 - low2) * (value - low1) / (high1 - low1);
+}
+
+function unspin(image) {
+  // FIXME: DRY
+  const workCanvas = document.createElement('canvas');
+  workCanvas.width = image.width;
+  workCanvas.height = image.height;
+
+  const imageCtx = workCanvas.getContext('2d');
+  imageCtx.drawImage(image, 0, 0);
+  const imageData = imageCtx.getImageData(0, 0, image.width, image.height);
+
+  const maxRadius = Math.min(image.width / 2, image.height / 2);
+
+  const unspunCanvas = document.createElement('canvas');
+  unspunCanvas.width = Math.floor(maxRadius * Math.PI);
+  unspunCanvas.height = maxRadius;
+  const unspunCtx = unspunCanvas.getContext('2d');
+
+  for (let y = 0; y < unspunCanvas.height; y++) {
+    for (let x = 0; x < unspunCanvas.width; x++) {
+      const r = map(y, 0, unspunCanvas.height, 0, maxRadius);
+      const a = map(x, 0, unspunCanvas.width, 0, 2 * Math.PI);
+
+      const sx = Math.floor(image.width / 2 + r * Math.cos(a));
+      const sy = Math.floor(image.height / 2 + r * Math.sin(a));
+
+      let b = 0;
+      if (sx >= 0 && sx < imageData.width && sy >= 0 && sy < imageData.height) {
+        b = Math.floor(255 * brightness(imageData, sx, sy));
+      }
+
+      unspunCtx.fillStyle = 'rgb('+b+','+b+','+b+')';
+      if (Math.random() < 0.05) {
+        console.log(x, y, unspunCtx.fillStyle);
+      }
+      unspunCtx.fillRect(x, y, 1, 1);
+    }
+  }
+
+  return unspunCanvas;
 }
 
 module.exports = {
   sonify,
+  unspin,
   coverArt,
 };

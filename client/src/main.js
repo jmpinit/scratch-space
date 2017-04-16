@@ -109,7 +109,9 @@ var artoolkitMarker = new THREEx.ArMarkerControls(arToolkitContext, markerRoot, 
 //    add an object in the scene
 //////////////////////////////////////////////////////////////////////////////////
 
-var geometry = new THREE.CircleGeometry(1, 32);
+const grabScale = 2.3;
+
+var geometry = new THREE.CircleGeometry(grabScale, 32);
 var material = new THREE.MeshBasicMaterial({ color: 0x000000 });
 var mesh = new THREE.Mesh(geometry, material);
 mesh.rotation.x = -Math.PI / 2;
@@ -135,16 +137,16 @@ const downLeft = new THREE.Vector3(0, -0.5, 0.5);
 const downRight = new THREE.Vector3(0, 0.5, 0.5);
 */
 const upLeft = new THREE.Object3D();
-upLeft.position.set(-0.5, 0, -0.5);
+upLeft.position.set(-grabScale, 0, -grabScale);
 
 const upRight = new THREE.Object3D();
-upRight.position.set(0.5, 0, -0.5);
+upRight.position.set(grabScale, 0, -grabScale);
 
 const downLeft = new THREE.Object3D();
-downLeft.position.set(-0.5, 0, 0.5);
+downLeft.position.set(-grabScale, 0, grabScale);
 
 const downRight = new THREE.Object3D();
-downRight.position.set(0.5, 0, 0.5);
+downRight.position.set(grabScale, 0, grabScale);
 
 markerRoot.add(upLeft);
 markerRoot.add(upRight);
@@ -169,6 +171,7 @@ button.onclick = function () {
   const canvas = document.getElementById('cover');
   const ctx = canvas.getContext('2d');
 
+  /*
   const image = document.createElement('img');
   image.src = '/out.png';
 
@@ -179,6 +182,23 @@ button.onclick = function () {
       ctx.drawImage(art, 0, 0);
     });
   };
+  */
+
+  const outCanvas = document.getElementById('output');
+  const rollCanvas = document.getElementById('unrolled');
+  const unspun = vinyl.unspin(outCanvas);
+
+  rollCanvas.width = unspun.width;
+  rollCanvas.height = unspun.height;
+  rollCanvas.getContext('2d').drawImage(unspun, 0, 0);
+
+  /*const outCanvas = document.getElementById('output');
+  vinyl.coverArt(vinyl.sonify(outCanvas)).then(art => {
+    console.log('drawing art');
+    canvas.width = art.width;
+    canvas.height = art.height;
+    ctx.drawImage(art, 0, 0);
+  });*/
 };
 
 //////////////////////////////////////////////////////////////////////////////////

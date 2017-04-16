@@ -2,7 +2,7 @@
 //    Init
 //////////////////////////////////////////////////////////////////////////////////
 
-const cam = require('./camera');
+const Camera = require('./camera');
 
 // init renderer
 var renderer  = new THREE.WebGLRenderer({
@@ -109,8 +109,8 @@ var artoolkitMarker = new THREEx.ArMarkerControls(arToolkitContext, markerRoot, 
 //////////////////////////////////////////////////////////////////////////////////
 
 var geometry = new THREE.CircleGeometry(1, 32);
-var material = new THREE.MeshBasicMaterial( { color: 0xffff00 } );
-var mesh = new THREE.Mesh( geometry, material );
+var material = new THREE.MeshBasicMaterial({ color: 0x000000 });
+var mesh = new THREE.Mesh(geometry, material);
 mesh.rotation.x = -Math.PI / 2;
 
 /*
@@ -144,7 +144,10 @@ onRenderFcts.push(function(){
 // render the scene
 onRenderFcts.push(function(){
   renderer.render( scene, camera );
-})
+});
+
+let realCamera;
+setTimeout(() => { realCamera = new Camera(document.getElementsByTagName('video')[0]); }, 1000);
 
 // run the rendering loop
 var lastTimeMsec= null
@@ -159,4 +162,43 @@ requestAnimationFrame(function animate(nowMsec){
   onRenderFcts.forEach(function(onRenderFct){
     onRenderFct(deltaMsec/1000, nowMsec/1000)
   })
+
+  if (realCamera) {
+    // Apply mask
+    const vinylCanvas = realCamera.snapshot();
+
+    if (vinylCanvas && vinylCanvas.width !== 0) {
+      // prep mask
+      const srcCanvas = document.createElement('canvas');
+      srcCanvas.width = renderer.domElement.width;
+      srcCanvas.height = renderer.domElement.height;
+
+      const srcCtx = srcCanvas.getContext('2d');
+      srcCtx.drawImage(renderer.domElement, 0, 0, srcCanvas.width, srcCanvas.height);
+
+      const maskData = srcCtx.getImageData(0, 0, renderer.domElement.width, renderer.domElement.height);
+
+      for (let i = 0; i < maskData.width * maskData.height; i++) {
+        //if (maskData.data[i * 4] !== 0) {
+          maskData.data[i * 4] = 255;
+          maskData.data[i * 4 + 1] = 255;
+          maskData.data[i * 4 + 2] = 255;
+          maskData.data[i * 4 + 3] = 0;
+        //}
+      }
+
+      const maskCanvas = document.createElement('canvas');
+      maskCanvas.width = maskData.width;
+      maskCanvas.height = maskData.height;
+
+      const maskCtx = maskCanvas.getContext('2d');
+      maskCtx.putImageData(maskData, 0, 0);
+
+      const outCanvas = document.getElementById('output');
+      const outCtx = outCanvas.getContext('2d');
+
+      //outCtx.drawImage(vinylCanvas, 0, 0, outCtx.width, outCtx.height);
+      outCtx.drawImage(maskCanvas, 0, 0, outCanvas.width, outCanvas.height);
+    }
+  }
 })

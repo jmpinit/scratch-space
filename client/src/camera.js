@@ -1,37 +1,37 @@
-const video = document.createElement('video');
+class Camera {
+  constructor (videoElement) {
+    this.video = videoElement;
+    this.streaming = false;
 
-let localMediaStream = null;
+    navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia || navigator.oGetUserMedia;
 
-navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia || navigator.oGetUserMedia;
+    const handleVideo = (stream) => {
+      this.video.src = window.URL.createObjectURL(stream);
+      this.streaming = true;
+    }
 
-if (navigator.getUserMedia) {
-  navigator.getUserMedia({ audio: false, video: true }, handleVideo, videoError);
-}
+    function videoError(e) {
+      console.log('Video error', e);
+    }
 
-function handleVideo(stream) {
-  console.log('got video stream!', stream);
-  video.src = window.URL.createObjectURL(stream);
-  localMediaStream = stream;
-}
+    if (navigator.getUserMedia) {
+      navigator.getUserMedia({ audio: false, video: true }, handleVideo, videoError);
+    }
+  }
 
-function videoError(e) {
-  console.log('Video error', e);
-}
+  snapshot() {
+    if (this.streaming) {
+      const canvas = document.createElement('canvas');
 
-function snapshot() {
-  if (localMediaStream) {
-    const canvas = document.createElement('canvas');
+      canvas.width = this.video.videoWidth;
+      canvas.height = this.video.videoHeight;
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(this.video, 0, 0);
 
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0);
-
-    return canvas;
+      return canvas;
+    }
   }
 }
 
-module.exports = {
-  snapshot,
-};
+module.exports = Camera;

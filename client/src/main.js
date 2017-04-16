@@ -3,6 +3,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 const Camera = require('./camera');
+const vinyl = require('./vinyl-press');;
 
 // init renderer
 var renderer  = new THREE.WebGLRenderer({
@@ -43,28 +44,28 @@ scene.add(camera);
 ////////////////////////////////////////////////////////////////////////////////
 
 var arToolkitSource = new THREEx.ArToolkitSource({
-  // to read from the webcam 
+  // to read from the webcam
   sourceType : 'webcam',
-  
+
   // to read from an image
   // sourceType : 'image',
-  // sourceUrl : '../../data/images/img.jpg',   
+  // sourceUrl : '../../data/images/img.jpg',
 
   // to read from a video
   // sourceType : 'video',
-  // sourceUrl : '../../data/videos/headtracking.mp4',    
+  // sourceUrl : '../../data/videos/headtracking.mp4',
 })
 
 arToolkitSource.init(function onReady(){
   // handle resize of renderer
-  arToolkitSource.onResize(renderer.domElement)   
+  arToolkitSource.onResize(renderer.domElement)
 })
 
 // handle resize
 window.addEventListener('resize', function(){
   // handle arToolkitSource resize
-  arToolkitSource.onResize(renderer.domElement)   
-})  
+  arToolkitSource.onResize(renderer.domElement)
+})
 ////////////////////////////////////////////////////////////////////////////////
 //          initialize arToolkitContext
 ////////////////////////////////////////////////////////////////////////////////
@@ -114,13 +115,13 @@ var mesh = new THREE.Mesh(geometry, material);
 mesh.rotation.x = -Math.PI / 2;
 
 /*
-// add a torus knot 
+// add a torus knot
 var geometry  = new THREE.CubeGeometry(1,1,1);
 var material  = new THREE.MeshNormalMaterial({
   transparent : true,
   opacity: 0.5,
   side: THREE.DoubleSide
-}); 
+});
 var mesh  = new THREE.Mesh( geometry, material );
 mesh.position.y = geometry.parameters.height/2
 */
@@ -152,7 +153,7 @@ markerRoot.add(downRight);
 
 /*
 var geometry  = new THREE.TorusKnotGeometry(0.3,0.1,32,32);
-var material  = new THREE.MeshNormalMaterial(); 
+var material  = new THREE.MeshNormalMaterial();
 var mesh  = new THREE.Mesh( geometry, material );
 mesh.position.y = 0.5
 markerRoot.add( mesh );
@@ -160,6 +161,25 @@ markerRoot.add( mesh );
 onRenderFcts.push(function(){
   mesh.rotation.x += 0.1
 })*/
+
+// BORING UI STUFF
+
+const button = document.getElementById('run');
+button.onclick = function () {
+  const canvas = document.getElementById('cover');
+  const ctx = canvas.getContext('2d');
+
+  const image = document.createElement('img');
+  image.src = '/out.png';
+
+  image.onload = function() {
+    console.log('image loaded');
+    vinyl.coverArt(vinyl.sonify(image)).then(art => {
+      console.log('drawing art');
+      ctx.drawImage(art, 0, 0);
+    });
+  };
+};
 
 //////////////////////////////////////////////////////////////////////////////////
 //    render the whole thing on the page
@@ -275,7 +295,7 @@ requestAnimationFrame(function animate(nowMsec){
       jsfeat.matmath.invert_3x3(transform, transform);
 
       const imageData = outCtx.getImageData(0, 0, outCanvas.width, outCanvas.height);
-      jsfeat.imgproc.grayscale(imageData.data, maskData.width, maskData.height, img_u8); 
+      jsfeat.imgproc.grayscale(imageData.data, maskData.width, maskData.height, img_u8);
       jsfeat.imgproc.warp_perspective(img_u8, img_u8_warp, transform, 0);
 
       // render result back to canvas

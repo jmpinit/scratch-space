@@ -2,6 +2,10 @@
 //    Init
 //////////////////////////////////////////////////////////////////////////////////
 
+const cam = require('./camera');
+
+setTimeout(() => document.body.appendChild(cam.snapshot()), 3000);
+
 // init renderer
 var renderer  = new THREE.WebGLRenderer({
   // antialias  : true,

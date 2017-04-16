@@ -4,8 +4,6 @@
 
 const cam = require('./camera');
 
-setTimeout(() => document.body.appendChild(cam.snapshot()), 3000);
-
 // init renderer
 var renderer  = new THREE.WebGLRenderer({
   // antialias  : true,
@@ -110,6 +108,12 @@ var artoolkitMarker = new THREEx.ArMarkerControls(arToolkitContext, markerRoot, 
 //    add an object in the scene
 //////////////////////////////////////////////////////////////////////////////////
 
+var geometry = new THREE.CircleGeometry(1, 32);
+var material = new THREE.MeshBasicMaterial( { color: 0xffff00 } );
+var mesh = new THREE.Mesh( geometry, material );
+mesh.rotation.x = -Math.PI / 2;
+
+/*
 // add a torus knot 
 var geometry  = new THREE.CubeGeometry(1,1,1);
 var material  = new THREE.MeshNormalMaterial({
@@ -119,8 +123,11 @@ var material  = new THREE.MeshNormalMaterial({
 }); 
 var mesh  = new THREE.Mesh( geometry, material );
 mesh.position.y = geometry.parameters.height/2
+*/
+
 markerRoot.add( mesh );
 
+/*
 var geometry  = new THREE.TorusKnotGeometry(0.3,0.1,32,32);
 var material  = new THREE.MeshNormalMaterial(); 
 var mesh  = new THREE.Mesh( geometry, material );
@@ -129,7 +136,7 @@ markerRoot.add( mesh );
 
 onRenderFcts.push(function(){
   mesh.rotation.x += 0.1
-})
+})*/
 
 //////////////////////////////////////////////////////////////////////////////////
 //    render the whole thing on the page

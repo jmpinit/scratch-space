@@ -59,10 +59,10 @@ function sonify(image) {
 
   // Scan image from left to right column-by-column
   let audioBufferIndex = 0;
-  for (let x = 0; x < image.width; x++) {
+  for (let x = 0; x < imageData.width; x++) {
     const column = [];
 
-    for (let y = 0; y < image.height; y++) {
+    for (let y = 0; y < imageData.height; y++) {
       column.unshift(brightness(imageData, x, y));
     }
 

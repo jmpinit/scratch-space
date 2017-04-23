@@ -1,6 +1,6 @@
 // Loads the image at the URL, draws it onto a new Canvas element
 // Returns the Canvas
-function loadImageAsCanvas(url) {
+function loadImageAsCanvas(url, width, height) {
   const imageTag = document.createElement('img');
   imageTag.src = url;
 
@@ -11,11 +11,11 @@ function loadImageAsCanvas(url) {
 
     imageTag.onload = () => {
       const canvas = document.createElement('canvas');
-      canvas.width = imageTag.width;
-      canvas.height = imageTag.height;
+      canvas.width = width || imageTag.width;
+      canvas.height = height || imageTag.height;
 
       const ctx = canvas.getContext('2d');
-      ctx.drawImage(imageTag, 0, 0);
+      ctx.drawImage(imageTag, 0, 0, canvas.width, canvas.height);
 
       fulfill(canvas);
     };

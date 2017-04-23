@@ -1,3 +1,6 @@
+const MIN_FREQ = 100; // Hz
+const MAX_FREQ = 10000; // Hz
+
 const audioContext = new (window.AudioContext ||
   window.webkitAudioContext ||
   window.mozAudioContext ||
@@ -28,12 +31,12 @@ for (let i = 0; i < 1024; i += 1) {
 }
 
 // intensities is an Array of values between 0 and 1
-function smooshSines(intensities, sampleIndex, minFreq, maxFreq) {
+function smooshSines(intensities, time, minFreq, maxFreq) {
   let sum = 0;
 
   for (let i = 0; i < intensities.length; i += 1) {
     const freq = map(i, 0, intensities.length, minFreq, maxFreq);
-    sum += intensities[i] * Math.sin((freq * sampleIndex) + phaseOffsets[i]);
+    sum += intensities[i] * Math.sin((2 * Math.PI * freq * time) + phaseOffsets[i]);
   }
 
   return sum;
@@ -66,7 +69,7 @@ function sonify(image) {
     }
 
     for (let sliceIndex = 0; sliceIndex < samplesPerCol; sliceIndex += 1) {
-      const sample = smooshSines(column, sampleIndex, 0.0, 1.0);
+      const sample = smooshSines(column, sampleIndex / audioContext.sampleRate, MIN_FREQ, MAX_FREQ);
       audioData[sampleIndex] = sample;
       sampleIndex += 1;
     }
@@ -89,8 +92,8 @@ function coverArt(audioBuffer) {
   audioBufferNode.connect(spectrumAnalyser);
 
   const canvas = document.createElement('canvas');
-  canvas.width = spectrumAnalyser.fftSize;
-  canvas.height = spectrumAnalyser.fftSize / 2;
+  canvas.width = 512;
+  canvas.height = 512;
 
   const ctx = canvas.getContext('2d');
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -101,11 +104,12 @@ function coverArt(audioBuffer) {
     return () => {
       analyser.getByteFrequencyData(audioData);
 
-      for (let i = 0; i < audioData.length; i += 1) {
-        const intensity = audioData[i];
+      const y = Math.floor(doneRatio * canvas.height);
 
-        const x = i;
-        const y = Math.floor(doneRatio * canvas.height);
+      for (let x = 0; x < canvas.width; x += 1) {
+        const frequency = map(x, 0, canvas.width, MIN_FREQ, MAX_FREQ);
+        const bin = Math.floor(frequency / (audioContext.sampleRate / spectrumAnalyser.fftSize));
+        const intensity = audioData[bin];
 
         const ii = ((y * imageData.width) + x) * 4;
         imageData.data[ii] = intensity;

@@ -4,6 +4,7 @@ module.exports = [
   {
     name: 'client-side',
     entry: './client/src/main.js',
+    devtool: 'source-map',
     output: {
       path: __dirname,
       filename: 'client/build/app.js',

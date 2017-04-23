@@ -16,13 +16,10 @@ function brightness(imageData, x, y) {
   return intensity;
 }
 
-// thx http://danielrapp.github.io/spectroface/
-// Scales a value, where minVal <= val <= maxVal
-// and returns a value r, where minScale <= r <= maxScale.
-// Just uses linear scaling.
-function linScale(val, minVal, maxVal, minScale, maxScale) {
-  const ratio = (maxScale - minScale) / (maxVal - minVal);
-  return (minScale + ratio) * (val - minVal);
+function map(value, low1, high1, low2, high2) {
+  const normalized = (value - low1) / high1;
+  const targetRange = high2 - low2;
+  return low2 + (normalized * targetRange);
 }
 
 // thx http://danielrapp.github.io/spectroface/
@@ -34,7 +31,7 @@ function sumSines(t, freqData, minFreq, maxFreq) {
   let sum = 0;
 
   for (let i = 0; i < freqData.length; i += 1) {
-    const freq = linScale(i, 0, freqData.length, minFreq, maxFreq);
+    const freq = map(i, 0, freqData.length, minFreq, maxFreq);
     sum += freqData[i] * Math.sin(freq * t);
   }
 
@@ -138,12 +135,6 @@ function coverArt(audioBuffer) {
       fulfill(canvas);
     };
   });
-}
-
-function map(value, low1, high1, low2, high2) {
-  const normalized = (value - low1) / high1;
-  const targetRange = high2 - low2;
-  return low2 + (normalized * targetRange);
 }
 
 function unspin(image) {

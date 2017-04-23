@@ -1,5 +1,6 @@
 const util = require('../src/utilities');
 const vinyl = require('../src/vinyl-press');
+const bufferToWav = require('audiobuffer-to-wav');
 
 function addLabelledImage(name, image) {
   const div = document.createElement('div');
@@ -66,6 +67,24 @@ function run() {
   .then((smallDiskWithTest) => {
     addLabelledImage('linear ramp down', smallDiskWithTest);
     const audioBuffer = vinyl.sonify(smallDiskWithTest);
+
+    // Create a WAV download
+    const wav = bufferToWav(audioBuffer);
+    const blob = new window.Blob([new DataView(wav)], {
+      type: 'audio/wav',
+    });
+
+    const url = window.URL.createObjectURL(blob);
+
+    const anchor = document.createElement('a');
+    document.body.appendChild(anchor);
+    anchor.style = 'display: none';
+    anchor.href = url;
+    anchor.download = 'audio.wav';
+    anchor.click();
+
+    window.URL.revokeObjectURL(url);
+
     return vinyl.coverArt(audioBuffer);
   })
   .then((coverArt) => {

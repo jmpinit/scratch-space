@@ -40,13 +40,7 @@ function sumSines(t, freqData, minFreq, maxFreq) {
 
 // Given an image (e.g. canvas) return AudioBuffer
 function sonify(image) {
-  const workCanvas = document.createElement('canvas');
-  workCanvas.width = image.width;
-  workCanvas.height = image.height;
-
-  const imageCtx = workCanvas.getContext('2d');
-  imageCtx.drawImage(image, 0, 0);
-
+  const imageCtx = image.getContext('2d');
   const imageData = imageCtx.getImageData(0, 0, image.width, image.height);
 
   const SQUARE_IMAGE_TIME = 15; // seconds
@@ -63,7 +57,9 @@ function sonify(image) {
     const column = [];
 
     for (let y = 0; y < imageData.height; y += 1) {
-      column.unshift(brightness(imageData, x, y));
+      // White is usually the background, so let's make it the quietest color
+      const inverted = 1 - brightness(imageData, x, y);
+      column.unshift(inverted);
     }
 
     for (let sliceIndex = 0; sliceIndex < samplesPerCol; sliceIndex += 1) {

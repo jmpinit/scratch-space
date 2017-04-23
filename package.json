@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/jmptable/scratch-space#readme",
   "dependencies": {
+    "audiobuffer-to-wav": "^1.0.0",
     "babel-cli": "^6.24.1",
     "babel-loader": "^6.4.1",
     "babel-preset-es2015": "^6.24.1",

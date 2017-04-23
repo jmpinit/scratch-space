@@ -22,17 +22,18 @@ function map(value, low1, high1, low2, high2) {
   return low2 + (normalized * targetRange);
 }
 
-// thx http://danielrapp.github.io/spectroface/
-// Each entry in the "freqData" array is interpreted as a
-// frequency, the zero:th entry represents minFreq and the last
-// entry represents maxFreq and we linearly interpolate the values inbetween.
-// The value at each index represents how much the sinusoid should be scaled.
-function sumSines(t, freqData, minFreq, maxFreq) {
+const phaseOffsets = [];
+for (let i = 0; i < 1024; i += 1) {
+  phaseOffsets[i] = Math.PI * 2 * Math.random();
+}
+
+// intensities is an Array of values between 0 and 1
+function smooshSines(intensities, sampleIndex, minFreq, maxFreq) {
   let sum = 0;
 
-  for (let i = 0; i < freqData.length; i += 1) {
-    const freq = map(i, 0, freqData.length, minFreq, maxFreq);
-    sum += freqData[i] * Math.sin(freq * t);
+  for (let i = 0; i < intensities.length; i += 1) {
+    const freq = map(i, 0, intensities.length, minFreq, maxFreq);
+    sum += intensities[i] * Math.sin((freq * sampleIndex) + phaseOffsets[i]);
   }
 
   return sum;
@@ -51,8 +52,10 @@ function sonify(image) {
 
   const samplesPerCol = audioData.length / image.width;
 
+  // FIXME low frequency pulsing
+
   // Scan image from left to right column-by-column
-  let audioBufferIndex = 0;
+  let sampleIndex = 0;
   for (let x = 0; x < imageData.width; x += 1) {
     const column = [];
 
@@ -63,8 +66,9 @@ function sonify(image) {
     }
 
     for (let sliceIndex = 0; sliceIndex < samplesPerCol; sliceIndex += 1) {
-      audioData[audioBufferIndex] = sumSines(audioBufferIndex, column, 0.5, 2.0);
-      audioBufferIndex += 1;
+      const sample = smooshSines(column, sampleIndex, 0.0, 1.0);
+      audioData[sampleIndex] = sample;
+      sampleIndex += 1;
     }
   }
 

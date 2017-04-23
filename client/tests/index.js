@@ -63,7 +63,7 @@ function run() {
   });
   */
 
-  util.loadImageAsCanvas('/images/linear-ramp-down.png')
+  util.loadImageAsCanvas('/images/smiley.png')
   .then((smallDiskWithTest) => {
     addLabelledImage('linear ramp down', smallDiskWithTest);
     const audioBuffer = vinyl.sonify(smallDiskWithTest);

@@ -1,14 +1,18 @@
 class Camera {
-  constructor (videoElement) {
+  constructor(videoElement) {
     this.video = videoElement;
     this.streaming = false;
 
-    navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia || navigator.oGetUserMedia;
+    navigator.getUserMedia = navigator.getUserMedia ||
+      navigator.webkitGetUserMedia ||
+      navigator.mozGetUserMedia ||
+      navigator.msGetUserMedia ||
+      navigator.oGetUserMedia;
 
     const handleVideo = (stream) => {
       this.video.src = window.URL.createObjectURL(stream);
       this.streaming = true;
-    }
+    };
 
     function videoError(e) {
       console.log('Video error', e);
@@ -31,6 +35,8 @@ class Camera {
 
       return canvas;
     }
+
+    return undefined;
   }
 }
 

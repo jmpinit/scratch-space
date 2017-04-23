@@ -143,6 +143,8 @@ function map(value, low1, high1, low2, high2) {
 }
 
 function unspin(image) {
+  const CENTER_RADIUS = 90; // px
+
   // FIXME: DRY
   const workCanvas = document.createElement('canvas');
   workCanvas.width = image.width;
@@ -156,12 +158,12 @@ function unspin(image) {
 
   const unspunCanvas = document.createElement('canvas');
   unspunCanvas.width = Math.floor(maxRadius * Math.PI);
-  unspunCanvas.height = maxRadius;
+  unspunCanvas.height = maxRadius - CENTER_RADIUS;
   const unspunCtx = unspunCanvas.getContext('2d');
 
   for (let y = 0; y < unspunCanvas.height; y++) {
     for (let x = 0; x < unspunCanvas.width; x++) {
-      const r = map(y, 0, unspunCanvas.height, 0, maxRadius);
+      const r = map(y, 0, unspunCanvas.height, CENTER_RADIUS, maxRadius);
       const a = map(x, 0, unspunCanvas.width, 0, 2 * Math.PI);
 
       const sx = Math.floor(image.width / 2 + r * Math.cos(a));

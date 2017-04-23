@@ -78,36 +78,36 @@ function sonify(image) {
   return audioBuffer;
 }
 
-// Given an AudioBuffer, return a canvas containing a vinyl cover representing the sound
-function coverArt(audioBuffer) {
+// Given an AudioBuffer, return a canvas containing a spectrogram of the audio
+function spectrogram(audioBuffer, width, height) {
   const audioLength = audioBuffer.length / audioContext.sampleRate;
   const renderContext = new OfflineAudioContext(1, audioBuffer.length, audioContext.sampleRate);
 
   const spectrumAnalyser = renderContext.createAnalyser();
   spectrumAnalyser.smoothingTimeConstant = 0;
-  spectrumAnalyser.fftSize = 512;
+  // spectrumAnalyser.fftSize = 512;
 
   const audioBufferNode = renderContext.createBufferSource();
   audioBufferNode.buffer = audioBuffer;
   audioBufferNode.connect(spectrumAnalyser);
 
   const canvas = document.createElement('canvas');
-  canvas.width = 512;
-  canvas.height = 512;
+  canvas.width = width || Math.floor(Math.PI * 512);
+  canvas.height = height || 512;
 
   const ctx = canvas.getContext('2d');
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
   // Fills in a row of the image with spectrogram data
   const audioData = new Uint8Array(spectrumAnalyser.frequencyBinCount);
-  function createRowSampler(doneRatio, analyser) {
+  function createColumnSampler(doneRatio, analyser) {
     return () => {
       analyser.getByteFrequencyData(audioData);
 
-      const y = Math.floor(doneRatio * canvas.height);
+      const x = Math.floor(doneRatio * canvas.width);
 
-      for (let x = 0; x < canvas.width; x += 1) {
-        const frequency = map(x, 0, canvas.width, MIN_FREQ, MAX_FREQ);
+      for (let y = 0; y < canvas.height; y += 1) {
+        const frequency = map(y, 0, canvas.height, MIN_FREQ, MAX_FREQ);
         const bin = Math.floor(frequency / (audioContext.sampleRate / spectrumAnalyser.fftSize));
         const intensity = audioData[bin];
 
@@ -120,9 +120,9 @@ function coverArt(audioBuffer) {
     };
   }
 
-  for (let y = 0; y < canvas.height; y += 1) {
-    const doneRatio = y / canvas.height;
-    const sampler = createRowSampler(doneRatio, spectrumAnalyser);
+  for (let x = 0; x < canvas.width; x += 1) {
+    const doneRatio = x / canvas.width;
+    const sampler = createColumnSampler(doneRatio, spectrumAnalyser);
 
     renderContext.suspend(audioLength * doneRatio).then(() => {
       sampler();
@@ -199,6 +199,6 @@ function play(audioBuffer) {
 module.exports = {
   sonify,
   unspin,
-  coverArt,
+  spectrogram,
   play,
 };

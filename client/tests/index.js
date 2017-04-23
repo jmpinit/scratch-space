@@ -85,14 +85,14 @@ function run() {
 
     window.URL.revokeObjectURL(url);
 
-    return vinyl.coverArt(audioBuffer);
+    return vinyl.spectrogram(audioBuffer);
   })
-  .then((coverArt) => {
+  .then((spectrogram) => {
     const endTime = Date.now();
     console.log('sonification took', (endTime - startTime) / 1000, 'seconds');
-    return Promise.resolve(coverArt);
+    return Promise.resolve(spectrogram);
   })
-  .then(coverArt => addLabelledImage('cover art', coverArt));
+  .then(spectrogram => addLabelledImage('cover art', spectrogram));
 }
 
 module.exports = {

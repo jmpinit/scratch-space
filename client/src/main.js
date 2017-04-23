@@ -1,4 +1,4 @@
-const testing = false;
+const testing = true;
 
 /* eslint-disable global-require */
 
@@ -7,7 +7,7 @@ if (testing) {
   document.body.setAttribute('style', '');
 
   const tests = require('../tests');
-  tests.testUnroll();
+  tests.run();
 } else {
   const ui = require('./ui');
   ui.interfaceUser();

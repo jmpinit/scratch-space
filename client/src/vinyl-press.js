@@ -6,8 +6,8 @@ const audioContext = new (window.AudioContext ||
 
 // thx http://danielrapp.github.io/spectroface/
 function brightness(imageData, x, y) {
-  const imageIndex = ((imageData.width * y) + x);
-  const r = imageData.data[imageIndex * 4];
+  const imageIndex = 4 * ((imageData.width * y) + x);
+  const r = imageData.data[imageIndex];
   const g = imageData.data[imageIndex + 1];
   const b = imageData.data[imageIndex + 2];
   const avg = (r + b + g) / 3;
@@ -141,11 +141,14 @@ function coverArt(audioBuffer) {
 }
 
 function map(value, low1, high1, low2, high2) {
-  return ((low2 + (high2 - low2)) * (value - low1)) / (high1 - low1);
+  const normalized = (value - low1) / high1;
+  const targetRange = high2 - low2;
+  return low2 + (normalized * targetRange);
 }
 
 function unspin(image) {
-  const CENTER_RADIUS = 90; // px
+  // Meant for hiro-disk.png
+  const CENTER_RATIO = 0.37;
 
   // FIXME: DRY
   const workCanvas = document.createElement('canvas');
@@ -156,24 +159,29 @@ function unspin(image) {
   imageCtx.drawImage(image, 0, 0);
   const imageData = imageCtx.getImageData(0, 0, image.width, image.height);
 
-  const maxRadius = Math.min(image.width / 2, image.height / 2);
+  const maxRadius = Math.min(imageData.width / 2, imageData.height / 2);
+
+  const centerRadius = CENTER_RATIO * maxRadius;
 
   const unspunCanvas = document.createElement('canvas');
   unspunCanvas.width = Math.floor(maxRadius * Math.PI);
-  unspunCanvas.height = maxRadius - CENTER_RADIUS;
+  unspunCanvas.height = maxRadius - centerRadius;
   const unspunCtx = unspunCanvas.getContext('2d');
 
   for (let y = 0; y < unspunCanvas.height; y += 1) {
     for (let x = 0; x < unspunCanvas.width; x += 1) {
-      const r = map(y, 0, unspunCanvas.height, CENTER_RADIUS, maxRadius);
+      const r = map(y, 0, unspunCanvas.height, centerRadius, maxRadius);
       const a = map(x, 0, unspunCanvas.width, 0, 2 * Math.PI);
 
-      const sx = Math.floor((image.width / 2) + (r * Math.cos(a)));
-      const sy = Math.floor((image.height / 2) + (r * Math.sin(a)));
+      const sx = Math.floor((imageData.width / 2) + (r * Math.cos(a)));
+      const sy = Math.floor((imageData.height / 2) + (r * Math.sin(a)));
 
       let b = 0;
       if (sx >= 0 && sx < imageData.width && sy >= 0 && sy < imageData.height) {
         b = Math.floor(255 * brightness(imageData, sx, sy));
+      } else {
+        // Should never happen
+        throw new Error('Sample position is out of bounds');
       }
 
       unspunCtx.fillStyle = `rgb(${b},${b},${b})`;

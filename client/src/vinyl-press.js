@@ -183,8 +183,18 @@ function unspin(image) {
   return unspunCanvas;
 }
 
+function play(audioBuffer) {
+  const audioBufferSourceNode = audioContext.createBufferSource();
+  audioBufferSourceNode.buffer = audioBuffer;
+  audioBufferSourceNode.loop = true;
+
+  audioBufferSourceNode.connect(audioContext.destination);
+  audioBufferSourceNode.start();
+}
+
 module.exports = {
   sonify,
   unspin,
   coverArt,
+  play,
 };

@@ -166,6 +166,7 @@ onRenderFcts.push(function(){
 
 // BORING UI STUFF
 
+let snd;
 const button = document.getElementById('run');
 button.onclick = function () {
   const canvas = document.getElementById('cover');
@@ -192,13 +193,19 @@ button.onclick = function () {
   rollCanvas.height = unspun.height;
   rollCanvas.getContext('2d').drawImage(unspun, 0, 0);
 
-  /*const outCanvas = document.getElementById('output');
-  vinyl.coverArt(vinyl.sonify(outCanvas)).then(art => {
+  snd = vinyl.sonify(unspun);
+  vinyl.coverArt(snd).then(art => {
     console.log('drawing art');
     canvas.width = art.width;
     canvas.height = art.height;
     ctx.drawImage(art, 0, 0);
-  });*/
+  });
+};
+
+const screechBtn = document.getElementById('screech');
+
+screechBtn.onclick = function() {
+  vinyl.play(snd);
 };
 
 //////////////////////////////////////////////////////////////////////////////////

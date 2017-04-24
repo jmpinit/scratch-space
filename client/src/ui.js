@@ -150,17 +150,24 @@ function interfaceUser() {
       const art = vinyl.spin(spectrogram);
       console.log('sonified');
 
-      ctx.drawImage(art, 0, 0, canvas.width, canvas.height);
+      //ctx.drawImage(art, 0, 0, canvas.width, canvas.height);
 
-      scene.remove(mesh);
+      markerRoot.remove(mesh);
 
       const texture = new THREE.Texture(art);
-      const artGeo = new THREE.CircleGeometry(grabScale, 32);
-      const artMaterial = new THREE.MeshBasicMaterial({ map: texture });
+      texture.needsUpdate = true;
+      const artGeo = new THREE.PlaneGeometry(grabScale * 2, grabScale * 2);
+      const artMaterial = new THREE.MeshBasicMaterial({
+        map: texture,
+        side: THREE.DoubleSide,
+      });
       const artMesh = new THREE.Mesh(artGeo, artMaterial);
       artMesh.rotation.x = -Math.PI / 2;
+      artMesh.rotation.z = Math.PI;
 
       markerRoot.add(artMesh);
+
+      console.log('Should be there');
     });
   };
 

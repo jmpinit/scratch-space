@@ -70,7 +70,7 @@ function sonify(image) {
       // White is usually the background, so let's make it the quietest color
       const inverted = 1 - brightness(imageData, x, y);
       const thresholded = inverted > 0.5 ? 1 : 0;
-      column.unshift(thresholded);
+      column.push(thresholded);
     }
 
     for (let sliceIndex = 0; sliceIndex < samplesPerCol; sliceIndex += 1) {
@@ -90,7 +90,7 @@ function spectrogram(audioBuffer, width, height) {
 
   const spectrumAnalyser = renderContext.createAnalyser();
   spectrumAnalyser.smoothingTimeConstant = 0;
-  // spectrumAnalyser.fftSize = 512;
+  spectrumAnalyser.fftSize = 512;
 
   const audioBufferNode = renderContext.createBufferSource();
   audioBufferNode.buffer = audioBuffer;

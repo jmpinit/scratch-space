@@ -40,7 +40,7 @@ function smooshSines(intensities, time, minFreq, maxFreq) {
 
   for (let i = 0; i < intensities.length; i += 1) {
     const freq = map(i, 0, intensities.length, minFreq, maxFreq);
-    sum += intensities[i] * Math.sin((2 * Math.PI * freq * time) + phaseOffsets[i]);
+    sum += (intensities[i] / 255) * Math.sin((2 * Math.PI * freq * time) + phaseOffsets[i]);
   }
 
   return sum;
@@ -63,14 +63,14 @@ function sonify(image) {
 
   // Scan image from left to right column-by-column
   let sampleIndex = 0;
-  for (let x = 0; x < imageData.width; x += 1) {
-    const column = [];
+  const column = new Uint8Array(imageData.height);
 
+  for (let x = 0; x < imageData.width; x += 1) {
     for (let y = 0; y < imageData.height; y += 1) {
       // White is usually the background, so let's make it the quietest color
       const inverted = 1 - brightness(imageData, x, y);
       const thresholded = inverted > 0.5 ? 1 : 0;
-      column.push(thresholded);
+      column[y] = Math.floor(255 * thresholded);
     }
 
     for (let sliceIndex = 0; sliceIndex < samplesPerCol; sliceIndex += 1) {

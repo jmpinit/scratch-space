@@ -69,7 +69,8 @@ function sonify(image) {
     for (let y = 0; y < imageData.height; y += 1) {
       // White is usually the background, so let's make it the quietest color
       const inverted = 1 - brightness(imageData, x, y);
-      column.unshift(inverted);
+      const thresholded = inverted > 0.5 ? 1 : 0;
+      column.unshift(thresholded);
     }
 
     for (let sliceIndex = 0; sliceIndex < samplesPerCol; sliceIndex += 1) {

@@ -1,6 +1,27 @@
 const EventEmitter = require('events').EventEmitter;
 const Camera = require('./camera');
 const vinyl = require('./vinyl-press');
+const util = require('./utilities');
+const bufferToWav = require('audiobuffer-to-wav');
+
+function downloadWav(audioBuffer) {
+  // Create a WAV download
+  const wav = bufferToWav(audioBuffer);
+  const blob = new window.Blob([new DataView(wav)], {
+    type: 'audio/wav',
+  });
+
+  const url = window.URL.createObjectURL(blob);
+
+  const anchor = document.createElement('a');
+  document.body.appendChild(anchor);
+  anchor.style = 'display: none';
+  anchor.href = url;
+  anchor.download = 'audio.wav';
+  anchor.click();
+
+  window.URL.revokeObjectURL(url);
+}
 
 function interfaceUser() {
   const uiRenderer = new EventEmitter();
@@ -116,15 +137,30 @@ function interfaceUser() {
     const rollCanvas = document.getElementById('unrolled');
     const unspun = vinyl.unspin(outCanvas);
 
-    rollCanvas.width = unspun.width;
-    rollCanvas.height = unspun.height;
-    rollCanvas.getContext('2d').drawImage(unspun, 0, 0);
+    rollCanvas.width = 512;//unspun.width;
+    rollCanvas.height = 512;//unspun.height;
+    // rollCanvas.getContext('2d').drawImage(unspun, 0, 0, rollCanvas.width, rollCanvas.height);
 
     snd = vinyl.sonify(unspun);
-    vinyl.coverArt(snd).then((art) => {
-      canvas.width = art.width;
-      canvas.height = art.height;
-      ctx.drawImage(art, 0, 0);
+    console.log('sonified');
+    // downloadWav(snd);
+
+    vinyl.spectrogram(snd).then((spectrogram) => {
+      // document.body.appendChild(spectrogram);
+      const art = vinyl.spin(spectrogram);
+      console.log('sonified');
+
+      ctx.drawImage(art, 0, 0, canvas.width, canvas.height);
+
+      scene.remove(mesh);
+
+      const texture = new THREE.Texture(art);
+      const artGeo = new THREE.CircleGeometry(grabScale, 32);
+      const artMaterial = new THREE.MeshBasicMaterial({ map: texture });
+      const artMesh = new THREE.Mesh(artGeo, artMaterial);
+      artMesh.rotation.x = -Math.PI / 2;
+
+      markerRoot.add(artMesh);
     });
   };
 

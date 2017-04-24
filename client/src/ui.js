@@ -130,27 +130,28 @@ function interfaceUser() {
   let snd;
   const button = document.getElementById('run');
   button.onclick = () => {
+    let startTime = Date.now();
+
+    /*
     const canvas = document.getElementById('cover');
-    const ctx = canvas.getContext('2d');
+    const rollCanvas = document.getElementById('unrolled');
+    */
 
     const outCanvas = document.getElementById('output');
-    const rollCanvas = document.getElementById('unrolled');
     const unspun = vinyl.unspin(outCanvas);
 
-    rollCanvas.width = 512;//unspun.width;
-    rollCanvas.height = 512;//unspun.height;
-    // rollCanvas.getContext('2d').drawImage(unspun, 0, 0, rollCanvas.width, rollCanvas.height);
-
+    // FIXME takes 30 seconds...
     snd = vinyl.sonify(unspun);
-    console.log('sonified');
+    console.log('Sonification took', (Date.now() - startTime) / 1000, 'seconds');
+    startTime = Date.now();
     // downloadWav(snd);
 
+    // FIXME takes 90 seconds...
     vinyl.spectrogram(snd).then((spectrogram) => {
-      // document.body.appendChild(spectrogram);
+      console.log('Generating spectrogram took', (Date.now() - startTime) / 1000, 'seconds');
+      startTime = Date.now();
       const art = vinyl.spin(spectrogram);
-      console.log('sonified');
-
-      //ctx.drawImage(art, 0, 0, canvas.width, canvas.height);
+      console.log('Creating disk texture took', (Date.now() - startTime) / 1000, 'seconds');
 
       markerRoot.remove(mesh);
 
@@ -166,8 +167,6 @@ function interfaceUser() {
       artMesh.rotation.z = Math.PI;
 
       markerRoot.add(artMesh);
-
-      console.log('Should be there');
     });
   };
 

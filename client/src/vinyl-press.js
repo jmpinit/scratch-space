@@ -20,7 +20,8 @@ function brightness(imageData, x, y) {
 }
 
 function map(value, low1, high1, low2, high2) {
-  const normalized = (value - low1) / high1;
+  const sourceRange = high1 - low1;
+  const normalized = (value - low1) / sourceRange;
   const targetRange = high2 - low2;
   return low2 + (normalized * targetRange);
 }

@@ -1,6 +1,9 @@
 const MIN_FREQ = 100; // Hz
 const MAX_FREQ = 10000; // Hz
 
+// Meant for hiro-disk.png
+const CENTER_RATIO = 0.37;
+
 const audioContext = new (window.AudioContext ||
   window.webkitAudioContext ||
   window.mozAudioContext ||
@@ -143,9 +146,6 @@ function spectrogram(audioBuffer, width, height) {
 }
 
 function unspin(image) {
-  // Meant for hiro-disk.png
-  const CENTER_RATIO = 0.37;
-
   // FIXME: DRY
   const workCanvas = document.createElement('canvas');
   workCanvas.width = image.width;
@@ -188,6 +188,47 @@ function unspin(image) {
   return unspunCanvas;
 }
 
+function distance(x1, y1, x2, y2) {
+  return Math.sqrt(((x2 - x1) ** 2) + ((y2 - y1) ** 2));
+}
+
+function spin(image) {
+  const radius = image.height;
+
+  const disk = document.createElement('canvas');
+  disk.width = radius * 2;
+  disk.height = radius * 2;
+
+  const ctx = disk.getContext('2d');
+
+  const imageData = image.getContext('2d').getImageData(0, 0, image.width, image.height);
+
+  const cx = disk.width / 2;
+  const cy = disk.height / 2;
+
+  for (let y = 0; y < disk.height; y += 1) {
+    for (let x = 0; x < disk.width; x += 1) {
+      const r = distance(cx, cy, x, y);
+      const a = Math.atan2(y - cy, x - cx);
+
+      if (a < -Math.PI || a > Math.PI) {
+        throw new Error(`${x}, ${y}, ${a}`);
+      }
+
+      const sx = Math.floor(map(a, -Math.PI, Math.PI, 0, image.width));
+      const sy = Math.floor(r);
+
+      if (sx >= 0 && sx < image.width && sy >= 0 && sy < image.height) {
+        const b = Math.floor(255 * brightness(imageData, sx, sy));
+        ctx.fillStyle = `rgb(${b},${b},${b})`;
+        ctx.fillRect(x, y, 1, 1);
+      }
+    }
+  }
+
+  return disk;
+}
+
 function play(audioBuffer) {
   const audioBufferSourceNode = audioContext.createBufferSource();
   audioBufferSourceNode.buffer = audioBuffer;
@@ -200,6 +241,7 @@ function play(audioBuffer) {
 module.exports = {
   sonify,
   unspin,
+  spin,
   spectrogram,
   play,
 };

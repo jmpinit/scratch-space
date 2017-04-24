@@ -92,7 +92,10 @@ function run() {
     console.log('sonification took', (endTime - startTime) / 1000, 'seconds');
     return Promise.resolve(spectrogram);
   })
-  .then(spectrogram => addLabelledImage('cover art', spectrogram));
+  .then((spectrogram) => {
+    addLabelledImage('spectrogram', spectrogram);
+    addLabelledImage('spun', vinyl.spin(spectrogram, 1024));
+  });
 }
 
 module.exports = {

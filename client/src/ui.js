@@ -295,12 +295,6 @@ function interfaceUser() {
         }
 
         outCtx.putImageData(imageData, 0, 0);
-
-        outCtx.fillStyle = '#fff';
-        outCtx.fillRect(screenUpLeft.x, screenUpLeft.y, 4, 4);
-        outCtx.fillRect(screenUpRight.x, screenUpRight.y, 4, 4);
-        outCtx.fillRect(screenDownLeft.x, screenDownLeft.y, 4, 4);
-        outCtx.fillRect(screenDownRight.x, screenDownRight.y, 4, 4);
       }
     }
   }

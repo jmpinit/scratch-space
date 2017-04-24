@@ -136,9 +136,11 @@ function interfaceUser() {
 
   uiRenderer.on('render', () => renderer.render(scene, camera));
 
+  // FIXME eww
   let realCamera;
   setTimeout(() => { realCamera = new Camera(document.getElementsByTagName('video')[0]); }, 1000);
 
+  let transform;
   const u8Img = new jsfeat.matrix_t(640, 480, jsfeat.U8_t | jsfeat.C1_t);
   const u8ImgWarp = new jsfeat.matrix_t(640, 480, jsfeat.U8_t | jsfeat.C1_t);
 
@@ -197,7 +199,7 @@ function interfaceUser() {
         outCtx.drawImage(maskCanvas, 0, 0, outCanvas.width, outCanvas.height);
 
         // warp
-        const transform = new jsfeat.matrix_t(3, 3, jsfeat.F32_t | jsfeat.C1_t);
+        transform = new jsfeat.matrix_t(3, 3, jsfeat.F32_t | jsfeat.C1_t);
 
         const toScreen = (pos) => {
           const vector = new THREE.Vector3();
@@ -247,7 +249,6 @@ function interfaceUser() {
         for (let i = (u8ImgWarp.cols * u8ImgWarp.rows) - 1; i >= 0; i -= 1) {
           pix = u8ImgWarp.data[i];
           u32Data[i] = alpha | (pix << 16) | (pix << 8) | pix;
-          i -= 1;
         }
 
         outCtx.putImageData(imageData, 0, 0);
